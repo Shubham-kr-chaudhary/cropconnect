@@ -50,7 +50,7 @@ export default function Register() {
                 value={user.name}
                 onChange={(e) => setUser({ ...user, name: e.target.value })}
                 required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-blue-300"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 focus:outline-none focus:border-blue-300"
               />
             </div>
 
@@ -65,7 +65,7 @@ export default function Register() {
                 value={user.email}
                 onChange={(e) => setUser({ ...user, email: e.target.value })}
                 required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-blue-300"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 focus:outline-none focus:border-blue-300"
               />
             </div>
 
@@ -80,7 +80,7 @@ export default function Register() {
                 value={user.password}
                 onChange={(e) => setUser({ ...user, password: e.target.value })}
                 required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-blue-300"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 focus:outline-none focus:border-blue-300"
               />
             </div>
 
@@ -92,7 +92,7 @@ export default function Register() {
                 id="role"
                 value={user.role}
                 onChange={(e) => setUser({ ...user, role: e.target.value })}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-blue-300"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 focus:outline-none focus:border-blue-300"
               >
                 <option value="farmer">Farmer</option>
                 <option value="firm">Firm</option>

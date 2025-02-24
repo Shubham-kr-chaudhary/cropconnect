@@ -1,27 +1,84 @@
+// require("dotenv").config();
+// const express = require("express");
+// const mongoose = require("mongoose");
+// const cors = require("cors");
+
+// const app = express();
+// app.use(express.json());
+// app.use(cors());
+
+// // 1) CONNECT TO MONGODB ATLAS
+// mongoose
+//   .connect(process.env.MONGO_URI /* remove deprecated options if driver 4+ */)
+//   .then(() => console.log("✅ MongoDB Atlas connected"))
+//   .catch((err) => console.error("❌ MongoDB connection error:", err));
+
+// // 2) DEFINE YOUR ROUTES
+// app.use("/api/auth", require("./routes/auth"));
+// app.use("/api/crops", require("./routes/crop"));
+// app.use("/api/user", require("./routes/user")); // <-- NEW ROUTE
+
+// // 3) START THE SERVER
+// // const PORT = process.env.PORT || 5000;
+// // app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+// const http = require("http");
+// const server = http.createServer(app);
+// const { Server } = require("socket.io");
+// const io = new Server(server, {
+//   cors: { origin: "*" }, // or your specific frontend URL
+// });
+
+// io.on("connection", (socket) => {
+//   console.log("A user connected:", socket.id);
+//   // handle events, e.g. socket.on("sendMessage", ...)
+// });
+
+// const PORT = process.env.PORT || 5000;
+// server.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+
 require("dotenv").config();
-
-
 const express = require("express");
-const dotenv = require("dotenv");
-const cors = require("cors");
 const mongoose = require("mongoose");
+const cors = require("cors");
 
-dotenv.config();
 const app = express();
 app.use(express.json());
 app.use(cors());
 
-// Database Connection
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-}).then(() => console.log("MongoDB Connected"))
-.catch(err => console.log(err));
+// 1) CONNECT TO MONGODB ATLAS
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("✅ MongoDB Atlas connected"))
+  .catch((err) => console.error("❌ MongoDB connection error:", err));
 
-// Routes
+// 2) DEFINE ROUTES
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/crops", require("./routes/crop"));
+app.use("/api/user", require("./routes/user"));
 
-// Start Server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// 3) SETUP SOCKET.IO SERVER
+const http = require("http");
+const server = http.createServer(app);
+const { Server } = require("socket.io");
+const io = new Server(server, {
+  cors: { origin: "*" }, // Allow all origins (Change to your frontend URL in production)
+});
+
+io.on("connection", (socket) => {
+  console.log("A user connected:", socket.id);
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
+  });
+
+  // Example: Handle custom events (Modify based on your needs)
+  socket.on("sendMessage", (message) => {
+    console.log("New Message:", message);
+    io.emit("receiveMessage", message); // Broadcast to all clients
+  });
+});
+
+// 4) START THE SERVER
+// const PORT = process.env.PORT || 5000;
+// server.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+server.listen(5000, () => console.log(`✅ Server running on port 5000`));
