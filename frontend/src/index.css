@@ -88,3 +88,11 @@ button:focus-visible {
   margin: 0 auto;
   padding: 1rem;
 }
+
+/* Home.css */
+
+.bg-backgroundImage {
+  background-image: url('../assets/bg1.jpeg');
+  background-size: cover;
+  background-position: center;
+}

@@ -10,20 +10,21 @@ import Chat from "./pages/Chat";
 
 function Layout({ children }) {
   return (
-    <>
-      <Navbar />
+    <div className="h-screen flex flex-col">
+      {/* Fixed Navbar */}
+      <header className="fixed top-0 left-0 right-0 z-50">
+        <Navbar />
+      </header>
       {/* 
-        pt-20 pushes the content below the fixed navbar,
-        h-[calc(100vh-5rem)] makes the container fixed in height (assuming navbar ~5rem tall),
-        overflow-hidden prevents scrolling.
+        The main container starts below the fixed navbar using mt-20 (assuming navbar is ~5rem tall).
+        overflow-auto ensures that only this container scrolls.
       */}
-      <div className="pt-20 h-[calc(100vh-5rem)] overflow-hidden">
+      <main className="mt-20 flex-1 overflow-hidden">
         {children}
-      </div>
-    </>
+      </main>
+    </div>
   );
 }
-
 
 Layout.propTypes = {
   children: PropTypes.node.isRequired,
