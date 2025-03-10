@@ -1,14 +1,34 @@
+
 // import { useEffect, useState } from "react";
 // import axios from "axios";
 // import { ethers } from "ethers";
 
 // export default function Marketplace() {
 //   const [crops, setCrops] = useState([]);
+//   const [userRole, setUserRole] = useState(null);
 
+//   // 1. Fetch Crops
 //   useEffect(() => {
-//     axios.get("http://localhost:5000/api/crops")
-//       .then(res => setCrops(res.data))
-//       .catch(err => console.error(err));
+//     axios
+//       .get("http://localhost:5000/api/crops")
+//       .then((res) => setCrops(res.data))
+//       .catch((err) => console.error(err));
+//   }, []);
+
+//   // 2. Fetch User Role
+//   useEffect(() => {
+//     const token = localStorage.getItem("token");
+//     if (token) {
+//       axios
+//         .get("http://localhost:5000/api/user/dashboard", {
+//           headers: { Authorization: `Bearer ${token}` },
+//         })
+//         .then((res) => {
+//           // res.data should contain user info, e.g. { _id, name, email, role, ... }
+//           setUserRole(res.data.role);
+//         })
+//         .catch((err) => console.error("Error fetching user data:", err));
+//     }
 //   }, []);
 
 //   const buyCrop = async (crop) => {
@@ -20,10 +40,8 @@
 //     const provider = new ethers.BrowserProvider(window.ethereum);
 //     const signer = await provider.getSigner();
 //     const contract = new ethers.Contract(
-//       "0x5FbDB2315678afecb367f032d93F642f64180aa3", // Replace with your actual contract address
-//       [
-//         "function buyCrop(uint id) public payable",
-//       ],
+//       "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+//       ["function buyCrop(uint id) public payable"],
 //       signer
 //     );
 
@@ -41,19 +59,28 @@
 
 //   return (
 //     <div className="max-w-5xl mx-auto p-6 bg-gray-100 min-h-screen">
-//       <h1 className="text-3xl font-bold text-green-700 text-center">Marketplace</h1>
+//       <h1 className="text-3xl font-bold text-green-700 text-center">
+//         Marketplace
+//       </h1>
+
 //       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
 //         {crops.map((crop) => (
 //           <div key={crop._id} className="bg-white p-4 shadow-md rounded-lg">
 //             <h2 className="text-xl font-bold">{crop.name}</h2>
-//             <p className="text-gray-600">Price: {crop.price} ETH</p>
+//             <p className="text-gray-600">Genre: {crop.genre || "N/A"}</p>
+//             <p className="text-gray-600">Category: {crop.category || "N/A"}</p>
+//             <p className="text-gray-600">Price: {crop.price} INR</p>
 //             <p className="text-gray-600">Quantity: {crop.quantity} units</p>
-//             <button 
-//               onClick={() => buyCrop(crop)}  // ✅ Now the function is used
-//               className="mt-4 w-full bg-green-700 text-white py-2 rounded hover:bg-green-800 transition"
-//             >
-//               Buy
-//             </button>
+
+//             {/* 3. Conditionally render the Buy button if userRole === "firm" */}
+//             {userRole === "firm" && (
+//               <button
+//                 onClick={() => buyCrop(crop)}
+//                 className="mt-4 w-full bg-green-700 text-white py-2 rounded hover:bg-green-800 transition"
+//               >
+//                 Buy
+//               </button>
+//             )}
 //           </div>
 //         ))}
 //       </div>
@@ -66,12 +93,31 @@ import { ethers } from "ethers";
 
 export default function Marketplace() {
   const [crops, setCrops] = useState([]);
+  const [userRole, setUserRole] = useState(null);
 
+  // 1. Fetch all crops
   useEffect(() => {
     axios
       .get("http://localhost:5000/api/crops")
       .then((res) => setCrops(res.data))
       .catch((err) => console.error(err));
+  }, []);
+
+  // 2. Fetch user role from /api/user/dashboard
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      axios
+        .get("http://localhost:5000/api/user/dashboard", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((res) => {
+          // NOTE: user is inside res.data.user, not res.data.role
+          // e.g. { user: { _id, name, email, role, ... }, crops: [...] }
+          setUserRole(res.data.user.role);
+        })
+        .catch((err) => console.error("Error fetching user data:", err));
+    }
   }, []);
 
   const buyCrop = async (crop) => {
@@ -102,24 +148,29 @@ export default function Marketplace() {
 
   return (
     <div className="max-w-5xl mx-auto p-6 bg-gray-100 min-h-screen">
-      <h1 className="text-3xl font-bold text-green-700 text-center">
-        Marketplace
-      </h1>
+      <h1 className="text-3xl font-bold text-green-700 text-center">Marketplace</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
         {crops.map((crop) => (
           <div key={crop._id} className="bg-white p-4 shadow-md rounded-lg">
-            <h2 className="text-xl font-bold">{crop.name}</h2>
-            <p className="text-gray-600">Genre: {crop.genre}</p>
-            <p className="text-gray-600">Category: {crop.category}</p>
-            <p className="text-gray-600">Price: {crop.price} INR</p>
-            <p className="text-gray-600">Quantity: {crop.quantity} units</p>
-            <button
-              onClick={() => buyCrop(crop)}
-              className="mt-4 w-full bg-green-700 text-white py-2 rounded hover:bg-green-800 transition"
-            >
-              Buy
-            </button>
+            {/* Force black text for clarity */}
+            <h2 className="text-xl font-bold text-black">{crop.name}</h2>
+            <p className="text-black">Genre: {crop.genre || "N/A"}</p>
+            <p className="text-black">Category: {crop.category || "N/A"}</p>
+            <p className="text-black">Price: {crop.price} INR</p>
+            <p className="text-black">
+              Quantity: {crop.quantity} {crop.unit}
+            </p>
+
+            {/* Show Buy button only if user is "firm" */}
+            {userRole === "firm" && (
+              <button
+                onClick={() => buyCrop(crop)}
+                className="mt-4 w-full bg-green-700 text-white py-2 rounded hover:bg-green-800 transition"
+              >
+                Buy
+              </button>
+            )}
           </div>
         ))}
       </div>
