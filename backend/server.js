@@ -17,6 +17,8 @@ mongoose
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/crops", require("./routes/crop"));
 app.use("/api/user", require("./routes/user"));
+app.use("/api/orders", require("./routes/order"));
+
 
 // 3) SETUP SOCKET.IO SERVER
 const http = require("http");

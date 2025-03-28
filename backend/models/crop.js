@@ -1,13 +1,14 @@
 const mongoose = require("mongoose");
 
 const CropSchema = new mongoose.Schema({
+  contractId: { type: String }, 
   farmer: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  name: { type: String, required: true },
-  price: { type: Number, required: true },
-  quantity: { type: Number, required: true },
-  unit: { type: String, default: "" },     
-  genre: { type: String, default: "" },    
-  category: { type: String, default: "" }, 
+  name: String,
+  price: Number,
+  quantity: Number,
+  unit: String,
+  genre: String,
+  category: String,
 });
 
 module.exports = mongoose.model("Crop", CropSchema);

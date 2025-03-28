@@ -1,19 +1,21 @@
-const hre = require("hardhat");
-
 async function main() {
-  // Get the contract factory
-  const CropConnect = await hre.ethers.deployContract("CropContract");
+  console.log("Deploying CropContract...");
 
-  // Wait for deployment
-  await CropConnect.waitForDeployment();
+  // Retrieve the trusted forwarder address from environment variables.
+  const trustedForwarder = process.env.TRUSTED_FORWARDER;
+  if (!trustedForwarder) {
+    throw new Error("TRUSTED_FORWARDER environment variable not set.");
+  }
 
-  // Log deployed contract address
-  console.log(`✅ CropConnect deployed to: ${await CropConnect.getAddress()}`);
+  // Deploy CropContract with the trusted forwarder.
+  const cropContract = await ethers.deployContract("CropContract", [trustedForwarder]);
+  await cropContract.waitForDeployment();
+  console.log("CropContract deployed to:", await cropContract.getAddress());
 }
 
-// Run deployment script
 main()
+  .then(() => process.exit(0))
   .catch((error) => {
     console.error(error);
-    process.exitCode = 1;
+    process.exit(1);
   });

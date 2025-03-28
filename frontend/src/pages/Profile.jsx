@@ -1,10 +1,11 @@
+
 import { useEffect, useState } from "react";
 import axios from "axios";
 
 export default function Profile() {
   const [user, setUser] = useState(null);
   const [crops, setCrops] = useState([]);
-  const [orders, setOrders] = useState([]); // For firm orders (placeholder)
+  const [orders, setOrders] = useState([]); // For firm orders
   const token = localStorage.getItem("token");
 
   // For adding new crop (farmer only)
@@ -35,14 +36,16 @@ export default function Profile() {
       .catch((err) => console.error("Error fetching dashboard data:", err));
   }, [token]);
 
-  // 2) If user is a firm, (placeholder) fetch orders
+  // 2) If user is a firm, fetch orders (placeholder)
   useEffect(() => {
     if (user && user.role === "firm") {
       // TODO: Replace with real orders endpoint:
-      // e.g. axios.get("/api/orders")...
-      setOrders([]); // Placeholder: empty
+      // e.g., axios.get("/api/orders", { headers: { Authorization: `Bearer ${token}` } })
+      //   .then((res) => setOrders(res.data))
+      //   .catch((err) => console.error(err));
+      setOrders([]); // Currently empty placeholder
     }
-  }, [user]);
+  }, [user, token]);
 
   // Handle input changes for new crop (farmer only)
   const handleInputChange = (e) => {
@@ -56,6 +59,7 @@ export default function Profile() {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCrops([...crops, res.data]);
+      // Reset form
       setNewCrop({
         name: "",
         price: "",
@@ -102,7 +106,7 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* IF the user is a Farmer, show Add Crop & My Crops */}
+      {/* If the user is a Farmer, show Add Crop & My Crops */}
       {user.role === "farmer" && (
         <>
           <h2 className="text-xl font-bold text-green-700 mb-4">Add New Crop</h2>
@@ -255,10 +259,9 @@ export default function Profile() {
       {user.role === "firm" && (
         <>
           <h2 className="text-xl font-bold text-green-700 mb-4">My Orders</h2>
-          {/* TODO: Replace with real orders from your backend */}
+          {/* Example placeholder. Replace with real data from /api/orders */}
           {orders.length > 0 ? (
             <div className="bg-white shadow-md rounded-lg overflow-hidden p-4">
-              {/* Example table or list of orders */}
               <ul>
                 {orders.map((order) => (
                   <li key={order._id} className="border-b py-2">
