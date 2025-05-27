@@ -1,95 +1,107 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom"; // for redirecting
-import {io} from "socket.io-client";
+import { useEffect, useState, useRef } from "react";
+import { io } from "socket.io-client";
+import { useNavigate } from "react-router-dom";
 
 export default function Chat() {
-  const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState([]);
+  const [socket, setSocket]       = useState(null);
+  const [myId, setMyId]           = useState(null);
+  const [message, setMessage]     = useState("");
+  const [messages, setMessages]   = useState([]);
 
-  const token = localStorage.getItem("token");
   const navigate = useNavigate();
+  const token    = localStorage.getItem("token");
+  const scrollRef = useRef();
 
-  // 1) Check for token on mount; if none, redirect to /login
+  // 1) Redirect if not authenticated
   useEffect(() => {
-    if (!token) {
-      navigate("/login");
-      return;
-    }
+    if (!token) navigate("/login");
   }, [token, navigate]);
 
-  // 2) Initialize socket only if token exists
-  const socket = io("http://localhost:5000");
-
-  // 3) Listen for incoming messages
+  // 2) Connect to Socket.IO once on mount
   useEffect(() => {
-    socket.on("receiveMessage", (msg) => {
+    const sock = io("http://localhost:5000", {
+      auth: { token },
+    });
+    setSocket(sock);
+
+    // capture our own socket.id
+    sock.on("connect", () => {
+      setMyId(sock.id);
+    });
+
+    // listen for incoming messages
+    sock.on("chat:receiveMessage", (msg) => {
       setMessages((prev) => [...prev, msg]);
     });
 
-    // Cleanup on unmount
-    return () => socket.off("receiveMessage");
-    // eslint-disable-next-line
-  }, []); // We skip token here because we only set up the socket once
+    return () => void sock.disconnect();
+  }, [token]);
 
-  // 4) Send a message
+  // 3) Auto-scroll to bottom on new message
+  useEffect(() => {
+    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // 4) Emit your message
   const sendMessage = () => {
-    if (message.trim() === "") return;
-    socket.emit("sendMessage", message);
-    setMessages((prev) => [...prev, { text: message, sender: "You" }]);
+    if (!message.trim() || !socket) return;
+    const msg = {
+      text:      message.trim(),
+      senderId:  socket.id,
+      timestamp: Date.now(),
+    };
+    // broadcast
+    socket.emit("chat:sendMessage", msg);
+    // locally append as well
+    // setMessages((prev) => [...prev, msg]);
     setMessage("");
   };
 
-  // 5) Render Chat UI
   return (
-    <div className="flex flex-col h-full">
-      {/* Messages area */}
-      <div className="bg-gray-200 flex-1 overflow-y-auto">
-        <div className="px-4 py-2">
-          {messages.map((msg, i) =>
-            msg.sender === "You" ? (
-              <div key={i} className="flex items-center justify-end mb-2">
-                <div className="bg-blue-500 text-white rounded-lg p-2 shadow mr-2 max-w-sm">
-                  {msg.text}
+    <div className="flex flex-col h-full max-w-2xl mx-auto border rounded">
+      {/* Message List */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+        {messages.map((msg, i) => {
+          const isSelf = msg.senderId === myId;
+          return (
+            <div
+              key={i}
+              className={`flex ${isSelf ? "justify-end" : "justify-start"}`}
+            >
+              <div
+                className={`max-w-xs px-4 py-2 rounded-lg break-words ${
+                  isSelf
+                    ? "bg-blue-600 text-white"
+                    : "bg-white text-gray-900 shadow"
+                }`}
+              >
+                <div className="text-xs text-gray-400 mb-1">
+                  {new Date(msg.timestamp).toLocaleTimeString()}
                 </div>
-                <img
-                  className="w-8 h-8 rounded-full"
-                  src="https://picsum.photos/50/50"
-                  alt="User Avatar"
-                />
+                <div>{msg.text}</div>
               </div>
-            ) : (
-              <div key={i} className="flex items-center mb-2">
-                <img
-                  className="w-8 h-8 rounded-full mr-2"
-                  src="https://picsum.photos/50/50"
-                  alt="User Avatar"
-                />
-                <div className="bg-white rounded-lg p-2 shadow mb-2 max-w-sm text-gray-900">
-                  {msg.text}
-                </div>
-              </div>
-            )
-          )}
-        </div>
+            </div>
+          );
+        })}
+        <div ref={scrollRef} />
       </div>
 
-      {/* Input area */}
-      <div className="bg-gray-100 px-4 py-2">
-        <div className="flex items-center">
-          <input
-            type="text"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            className="w-full border rounded-full py-2 px-4 mr-2 text-gray-900"
-            placeholder="Type your message..."
-          />
-          <button
-            onClick={sendMessage}
-            className="bg-blue-500 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-full"
-          >
-            Send
-          </button>
-        </div>
+      {/* Input Area */}
+      <div className="p-3 bg-white flex items-center border-t">
+        <input
+          type="text"
+          className="flex-1 border border-gray-300 rounded-full py-2 px-4 mr-2 focus:outline-none"
+          placeholder="Type your message…"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+        />
+        <button
+          onClick={sendMessage}
+          className="px-4 bg-green-600 hover:bg-green-700 text-white rounded-full"
+        >
+          Send
+        </button>
       </div>
     </div>
   );

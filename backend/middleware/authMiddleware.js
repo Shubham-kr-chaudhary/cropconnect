@@ -1,26 +1,40 @@
-const jwt = require("jsonwebtoken");
 
-const verifyToken = (req, res, next) => {
+const jwt  = require("jsonwebtoken");
+const User = require("../models/User");
+
+async function verifyToken(req, res, next) {
   const header = req.header("Authorization");
   if (!header) {
     return res.status(401).json({ error: "No token, authorization denied" });
   }
 
-  // Extract token from "Bearer <token>"
   const token = header.replace("Bearer ", "").trim();
   if (!token) {
     return res.status(401).json({ error: "No token, authorization denied" });
   }
 
   try {
-    // Verify the token using your secret key
+    // 1) Verify & decode
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = { id: decoded.id, role: decoded.role }; // Attach user details to req
-    next(); // Proceed to next middleware/route
+
+    // 2) Look up the full user record
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      return res.status(401).json({ error: "User no longer exists" });
+    }
+
+    // 3) Attach the bits we need downstream
+    req.user = {
+      id:           user._id.toString(),
+      role:         user.role,
+      solanaPubkey: user.solanaPubkey,
+    };
+
+    next();
   } catch (err) {
-    console.error("Invalid token:", err);
+    console.error("AuthMiddleware error:", err);
     return res.status(401).json({ error: "Token is not valid" });
   }
-};
+}
 
 module.exports = verifyToken;

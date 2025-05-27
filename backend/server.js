@@ -3,6 +3,8 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 
+const paymentsRouter = require("./routes/payments");
+
 const app = express();
 app.use(express.json());
 app.use(cors());
@@ -18,31 +20,30 @@ app.use("/api/auth", require("./routes/auth"));
 app.use("/api/crops", require("./routes/crop"));
 app.use("/api/user", require("./routes/user"));
 app.use("/api/orders", require("./routes/order"));
-
+app.use("/api/payments", paymentsRouter);
 
 // 3) SETUP SOCKET.IO SERVER
 const http = require("http");
 const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server, {
-  cors: { origin: "*" }, // Allow all origins (Change to your frontend URL in production)
+  cors: { origin: "http://localhost:5173" }, // your React dev URL
 });
 
 io.on("connection", (socket) => {
-  console.log("A user connected:", socket.id);
+  console.log("⚡️ User connected:", socket.id);
 
-  socket.on("disconnect", () => {
-    console.log("User disconnected:", socket.id);
+  // When a client emits "chat:sendMessage", broadcast it:
+  socket.on("chat:sendMessage", (msg) => {
+    console.log("📨 chat:sendMessage:", msg);
+    io.emit("chat:receiveMessage", msg);
   });
 
-  // Example: Handle custom events (Modify based on your needs)
-  socket.on("sendMessage", (message) => {
-    console.log("New Message:", message);
-    io.emit("receiveMessage", message); // Broadcast to all clients
+  socket.on("disconnect", () => {
+    console.log("❌ User disconnected:", socket.id);
   });
 });
 
 // 4) START THE SERVER
-// const PORT = process.env.PORT || 5000;
-// server.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
-server.listen(5000, () => console.log(`✅ Server running on port 5000`));
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));

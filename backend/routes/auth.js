@@ -1,21 +1,36 @@
+const express  = require("express");
+const bcrypt   = require("bcryptjs");
+const jwt      = require("jsonwebtoken");
+const { Keypair } = require("@solana/web3.js");
+const User     = require("../models/User");
+const verifyToken = require("../middleware/authMiddleware");
 
-
-// module.exports = router;
-const express = require("express");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const User = require("../models/User"); 
-const verifyToken = require("../middleware/authMiddleware"); // Import middleware
 const router = express.Router();
 
 // Register Route
 router.post("/register", async (req, res) => {
   const { name, email, password, role } = req.body;
   try {
+    // 1) Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
-    await User.create({ name, email, password: hashedPassword, role });
+
+    // 2) Generate a new Solana keypair for this user
+    const keypair       = Keypair.generate();
+    const solanaPubkey  = keypair.publicKey.toBase58();
+    // (Optionally persist keypair.secretKey somewhere secure)
+
+    // 3) Create user with solanaPubkey
+    const user = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      role,
+      solanaPubkey,
+    });
+
     res.json({ message: "User registered successfully" });
   } catch (error) {
+    console.error("Registration error:", error);
     res.status(400).json({ error: error.message });
   }
 });
@@ -24,17 +39,23 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
   try {
+    // 1) Find & verify user
     const user = await User.findOne({ email });
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(400).json({ error: "Invalid credentials" });
     }
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
+
+    // 2) Sign JWT including solanaPubkey
+    const payload = {
+      id:          user._id,
+      role:        user.role,
+      solanaPubkey: user.solanaPubkey,
+    };
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
+
     res.json({ token, role: user.role });
   } catch (error) {
+    console.error("Login error:", error);
     res.status(500).json({ error: error.message });
   }
 });

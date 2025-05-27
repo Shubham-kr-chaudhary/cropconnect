@@ -7,18 +7,16 @@ import Register from "./pages/Register";
 import Marketplace from "./pages/Marketplace";
 import Profile from "./pages/Profile";
 import Chat from "./pages/Chat";
+import About from "./pages/About";
 
 function Layout({ children }) {
   return (
     <div className="h-screen flex flex-col">
-      {/* Fixed Navbar */}
+      {}
       <header className="fixed top-0 left-0 right-0 z-50">
         <Navbar />
       </header>
-      {/* 
-        The main container starts below the fixed navbar using mt-20 (assuming navbar is ~5rem tall).
-        overflow-auto ensures that only this container scrolls.
-      */}
+      {}
       <main className="mt-20 flex-1 overflow-hidden">
         {children}
       </main>
@@ -40,7 +38,9 @@ export default function App() {
         <Route path="/marketplace" element={<Layout><Marketplace /></Layout>} />
         <Route path="/profile" element={<Layout><Profile /></Layout>} />
         <Route path="/chat" element={<Layout><Chat /></Layout>} />
+        <Route path="/about" element={<Layout><About /></Layout>} />
       </Routes>
     </Router>
   );
 }
+
